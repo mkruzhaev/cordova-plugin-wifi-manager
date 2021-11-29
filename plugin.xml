@@ -4,7 +4,7 @@
     <description>Wi-Fi Manager Plugin for Apache Cordova</description>
     <license>MIT</license>
     <keywords>cordova,wifi</keywords>
-    <repo>https://github.com/sushichop/cordova-plugin-wifi-manager.git</repo>
+    <repo>https://github.com/mkruzhaev/cordova-plugin-wifi-manager.git</repo>
 
     <js-module src="www/wifiManager.js" name="wifiManager">
         <clobbers target="wifiManager" />
