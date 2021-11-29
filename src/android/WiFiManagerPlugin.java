@@ -83,19 +83,25 @@ public class WiFiManagerPlugin extends CordovaPlugin {
     private void connect(JSONArray args, CallbackContext callbackContext) throws JSONException {
         String ssid = args.optString(0);
         String passphrase = args.optString(1);
+        Boolean hidden = args.optBoolean(2);
 
         if (isAndroidQOrLater()) {
-            connectAndroidQ(ssid, passphrase, callbackContext);
+            connectAndroidQ(ssid, passphrase, hidden, callbackContext);
         } else {
-            connectAndroid(ssid, passphrase, callbackContext);
+            connectAndroid(ssid, passphrase, hidden, callbackContext);
         }
     }
 
     @TargetApi(Build.VERSION_CODES.Q)
-    private void connectAndroidQ(final String ssid, final String passphrase, CallbackContext callbackContext) {
+    private void connectAndroidQ(final String ssid, final String passphrase, final Boolean hidden, CallbackContext callbackContext) {
         WifiNetworkSpecifier.Builder wifiNetworkSpecifierBuilder = new WifiNetworkSpecifier.Builder()
                 .setSsid(ssid)
                 .setWpa2Passphrase(passphrase);
+        
+        if (hidden)
+        {
+            wifiNetworkSpecifierBuilder = wifiNetworkSpecifierBuilder.setIsHiddenSsid(true);
+        }
 
         NetworkRequest networkRequest = new NetworkRequest.Builder()
                 .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
@@ -152,12 +158,12 @@ public class WiFiManagerPlugin extends CordovaPlugin {
         connectivityManager.requestNetwork(networkRequest, networkCallback);
     }
 
-    private void connectAndroid(final String ssid, final String passphrase, CallbackContext callbackContext) throws JSONException {
+    private void connectAndroid(final String ssid, final String passphrase, Boolean hidden, CallbackContext callbackContext) throws JSONException {
         if (!wifiManager.isWifiEnabled()) {
             wifiManager.setWifiEnabled(true);
         }
 
-        WifiConfiguration config = setWPAConfiguration(ssid, passphrase);
+        WifiConfiguration config = setWPAConfiguration(ssid, passphrase, hidden);
         int networkId = wifiManager.addNetwork(config);
         wifiManager.updateNetwork(config);
 
@@ -245,7 +251,7 @@ public class WiFiManagerPlugin extends CordovaPlugin {
         callbackContext.error(json);
     }
 
-    private WifiConfiguration setWPAConfiguration(String ssid, String passphrase) {
+    private WifiConfiguration setWPAConfiguration(String ssid, String passphrase, Boolean hidden) {
         WifiConfiguration config = new WifiConfiguration();
         config.SSID = "\"" + ssid + "\"";
         if (passphrase != null) {
@@ -261,11 +267,15 @@ public class WiFiManagerPlugin extends CordovaPlugin {
         config.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
         config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
         config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
+        if (hidden)
+        {
+            config.hiddenSSID  = true;
+        }
 
         return config;
     }
 
     private WifiConfiguration setWPAConfiguration(String ssid) {
-        return setWPAConfiguration(ssid, null);
+        return setWPAConfiguration(ssid, null, false);
     }
 }
